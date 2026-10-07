@@ -1,0 +1,16 @@
+{
+  "annotations":{"list":[]},
+  "editable":true,
+  "panels":[
+    {"title":"Backend Up","type":"stat","gridPos":{"h":4,"w":8,"x":0,"y":0},"targets":[{"expr":"up{job=\"backend\"}","refId":"A"}]},
+    {"title":"NGINX Exporter Up","type":"stat","gridPos":{"h":4,"w":8,"x":8,"y":0},"targets":[{"expr":"up{job=\"nginx-exporter\"}","refId":"A"}]},
+    {"title":"ECS CPU Utilized","type":"timeseries","gridPos":{"h":8,"w":16,"x":0,"y":4},"targets":[{"expr":"aws_ecs_containerinsights_cpuutilized_average","refId":"A"}]},
+    {"title":"ECS Memory Utilized","type":"timeseries","gridPos":{"h":8,"w":16,"x":0,"y":12},"targets":[{"expr":"aws_ecs_containerinsights_memoryutilized_average","refId":"A"}]}
+  ],
+  "schemaVersion":39,
+  "tags":["ecs"],
+  "templating":{"list":[]},
+  "time":{"from":"now-1h","to":"now"},
+  "title":"ECS Monitoring",
+  "uid":"ecs-monitoring"
+}

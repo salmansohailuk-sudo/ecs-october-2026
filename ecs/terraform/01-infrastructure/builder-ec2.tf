@@ -21,24 +21,24 @@ resource "aws_instance" "builder" {
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.builder.name
 
-  # Deliberately no key_name.
-  # Connect using EC2 Instance Connect from the AWS Console.
-
+  # No key pair. Use EC2 Instance Connect from the AWS Console.
   user_data = <<-EOF
     #!/bin/bash
     set -eux
 
     dnf update -y
-    dnf install -y docker git awscli mariadb105
+    dnf install -y docker git awscli mariadb105 curl
 
     systemctl enable docker
     systemctl start docker
-
     usermod -aG docker ec2-user
 
-    mkdir -p /home/ec2-user
-    cd /home/ec2-user
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -SL "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64" \\
+      -o /usr/local/lib/docker/cli-plugins/docker-compose
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
+    cd /home/ec2-user
     if [ ! -d /home/ec2-user/ecs-october-2026 ]; then
       git clone https://github.com/salmansohailuk-sudo/ecs-october-2026.git /home/ec2-user/ecs-october-2026
     fi

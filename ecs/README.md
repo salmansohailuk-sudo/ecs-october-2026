@@ -1,77 +1,139 @@
 # ECS October 2026
 
-Standalone ECS test project. This project is independent from the existing EC2 Docker Compose project.
+Standalone ECS test project. It is independent from the existing EC2 Docker application.
+
+The builder EC2 only builds Docker images, pushes them to ECR and can initialise RDS. The application and monitoring run on ECS Fargate.
 
 ## Deployment order
 
-### 1. Create base infrastructure
+### Stage 1 - infrastructure
 
 ```bash
-cd terraform/01-infrastructure
+cd ecs/terraform/01-infrastructure
 terraform init
 terraform apply
 ```
 
-This creates the VPC, public subnets, ECR repositories, RDS MySQL, builder EC2 and IAM permissions. It does NOT create ECS.
+Creates:
+- VPC and two public subnets
+- Internet Gateway and public routes
+- RDS MySQL
+- Four ECR repositories
+- Builder EC2 with Docker, Docker Compose, AWS CLI, Git and MySQL client
+- Builder IAM role
 
-### 2. Connect to the builder EC2
+It does NOT create ECS.
 
-Use AWS Console -> EC2 -> Instances -> Connect -> EC2 Instance Connect.
+### Connect to builder EC2
+
+AWS Console -> EC2 -> Instances -> select the builder -> Connect -> EC2 Instance Connect.
+
+Then:
 
 ```bash
 cd /home/ec2-user/ecs-october-2026/ecs
 ```
 
-### 3. Build images
+### Stage 1a - initialise database
 
-No Docker Compose is used.
+```bash
+export RDS_ENDPOINT="$(cd terraform/01-infrastructure && terraform output -raw db_endpoint)"
+export DB_PASSWORD="Cloud123"
+./initialize-database.sh
+```
+
+### Stage 1b - build images
+
+Docker Compose is used only to build the images. It does not start the application.
 
 ```bash
 ./build-images.sh
 ```
 
-### 4. Push images to ECR
+### Stage 1c - push images
 
 ```bash
 ./push-images.sh
 ```
 
-Images:
+Four images are pushed:
 - ecomm-ecs-frontend
 - ecomm-ecs-backend
 - monitoring-ecs-prometheus
 - monitoring-ecs-grafana
 
-### 5. Initialise RDS
+### Stage 2 - ECS
+
+First collect Stage 1 outputs:
 
 ```bash
-./initialize-database.sh
+cd terraform/01-infrastructure
+terraform output
 ```
 
-This runs createdatabase.sql against the RDS MySQL database.
+Copy the VPC, subnet, ECR and DB endpoint values into:
 
-### 6. Create ECS
+```text
+terraform/02-ecs/terraform.tfvars
+```
 
-Only after the images are in ECR and the database has been initialised:
+Create it from the example:
 
 ```bash
-cd terraform/02-ecs
+cd ../02-ecs
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Set:
+- vpc_id
+- public_subnet_a_id
+- public_subnet_b_id
+- ecr_frontend
+- ecr_backend
+- ecr_prometheus
+- ecr_grafana
+- db_endpoint
+- db_password
+- stripe_secret_key
+- stripe_webhook_secret
+- grafana_admin_password
+
+Then:
+
+```bash
 terraform init
 terraform apply
 ```
 
-This creates the ECS cluster, Cloud Map service discovery, ALB, task definitions and ECS services.
+## Runtime architecture
+
+```text
+Internet
+   |
+   v
+ ALB
+   |-- :80   -> Frontend/Nginx -> Backend
+   |-- :3000 -> Grafana
+   `-- :9090 -> Prometheus
+
+ECS Cloud Map namespace:
+  testcluster.local
+
+backend.testcluster.local:5000
+prometheus.testcluster.local:9090
+frontend.testcluster.local:9113
+```
+
+Nginx exporter is baked into the frontend image.
+CloudWatch exporter is baked into the Prometheus image.
+
+There are no separate ECR repositories for either exporter.
 
 ## Important
 
-There is intentionally:
-- no SSH key pair
-- no SSM / Session Manager
-- no Docker Compose in this ECS project
-- no nginx exporter ECR repository
-- no CloudWatch exporter ECR repository
-
-The nginx exporter is baked into the frontend image.
-The CloudWatch exporter is baked into the Prometheus image.
-
-The builder EC2 is only for building and pushing images. The application and monitoring run on ECS Fargate.
+- No EC2 key pair is required.
+- No SSM Session Manager is required.
+- No NAT Gateway is used.
+- ECS Fargate tasks run in public subnets with public IPs for this testing setup.
+- Do not commit `terraform.tfvars` or secrets.
+- The existing EC2 project is not modified by this project.

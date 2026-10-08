@@ -22,12 +22,14 @@ resource "aws_security_group" "rds" {
   name   = "${var.project_name}-rds-sg"
   vpc_id = aws_vpc.main.id
 
+  # Testing setup: allow MySQL from this VPC so both the builder EC2
+  # and ECS Fargate tasks can initialise/use the database.
   ingress {
-    description     = "MySQL from builder EC2"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.builder.id]
+    description = "MySQL from project VPC"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["10.20.0.0/16"]
   }
 
   egress {

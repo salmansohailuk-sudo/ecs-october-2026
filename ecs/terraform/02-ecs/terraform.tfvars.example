@@ -1,0 +1,25 @@
+# Copy this file to terraform.tfvars and fill in the values from Stage 1.
+# Do NOT commit terraform.tfvars.
+
+aws_region    = "us-east-1"
+project_name  = "ecs-october-2026"
+namespace_name = "testcluster.local"
+
+vpc_id               = "REPLACE_WITH_STAGE_1_VPC_ID"
+public_subnet_a_id   = "REPLACE_WITH_STAGE_1_PUBLIC_SUBNET_A_ID"
+public_subnet_b_id   = "REPLACE_WITH_STAGE_1_PUBLIC_SUBNET_B_ID"
+
+ecr_frontend   = "REPLACE_WITH_STAGE_1_ECR_FRONTEND"
+ecr_backend    = "REPLACE_WITH_STAGE_1_ECR_BACKEND"
+ecr_prometheus = "REPLACE_WITH_STAGE_1_ECR_PROMETHEUS"
+ecr_grafana    = "REPLACE_WITH_STAGE_1_ECR_GRAFANA"
+
+db_endpoint = "REPLACE_WITH_STAGE_1_DB_ENDPOINT"
+db_username = "admin"
+db_password = "REPLACE_WITH_RDS_PASSWORD"
+
+stripe_secret_key   = "REPLACE_WITH_STRIPE_TEST_SECRET_KEY"
+stripe_webhook_secret = "REPLACE_WITH_STRIPE_WEBHOOK_SECRET"
+
+grafana_admin_user     = "admin"
+grafana_admin_password = "REPLACE_WITH_GRAFANA_PASSWORD"

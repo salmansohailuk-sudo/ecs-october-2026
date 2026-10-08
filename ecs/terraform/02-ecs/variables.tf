@@ -13,17 +13,6 @@ variable "namespace_name" {
   default = "testcluster.local"
 }
 
-variable "db_username" {
-  type    = string
-  default = "admin"
-}
-
-variable "db_password" {
-  type      = string
-  sensitive = true
-  default   = "Cloud123"
-}
-
 variable "vpc_id" {
   type = string
 }
@@ -54,4 +43,34 @@ variable "ecr_grafana" {
 
 variable "db_endpoint" {
   type = string
+}
+
+variable "db_username" {
+  type    = string
+  default = "admin"
+}
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "stripe_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "stripe_webhook_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "grafana_admin_user" {
+  type    = string
+  default = "admin"
+}
+
+variable "grafana_admin_password" {
+  type      = string
+  sensitive = true
 }

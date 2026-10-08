@@ -1,8 +1,8 @@
 locals {
-  frontend_image  = "${var.ecr_frontend}:latest"
-  backend_image   = "${var.ecr_backend}:latest"
+  frontend_image   = "${var.ecr_frontend}:latest"
+  backend_image    = "${var.ecr_backend}:latest"
   prometheus_image = "${var.ecr_prometheus}:latest"
-  grafana_image   = "${var.ecr_grafana}:latest"
+  grafana_image    = "${var.ecr_grafana}:latest"
 }
 
 resource "aws_ecs_task_definition" "frontend" {
@@ -63,7 +63,9 @@ resource "aws_ecs_task_definition" "backend" {
       { name = "DB_PORT", value = "3306" },
       { name = "DB_NAME", value = "ecomm" },
       { name = "DB_USER", value = var.db_username },
-      { name = "DB_PASSWORD", value = var.db_password }
+      { name = "DB_PASSWORD", value = var.db_password },
+      { name = "STRIPE_SECRET_KEY", value = var.stripe_secret_key },
+      { name = "STRIPE_WEBHOOK_SECRET", value = var.stripe_webhook_secret }
     ]
 
     logConfiguration = {
@@ -125,8 +127,8 @@ resource "aws_ecs_task_definition" "grafana" {
     ]
 
     environment = [
-      { name = "GF_SECURITY_ADMIN_USER", value = "admin" },
-      { name = "GF_SECURITY_ADMIN_PASSWORD", value = "admin" },
+      { name = "GF_SECURITY_ADMIN_USER", value = var.grafana_admin_user },
+      { name = "GF_SECURITY_ADMIN_PASSWORD", value = var.grafana_admin_password },
       { name = "PROMETHEUS_URL", value = "http://prometheus.${var.namespace_name}:9090" },
       { name = "DB_HOST", value = var.db_endpoint },
       { name = "DB_PORT", value = "3306" },
@@ -203,9 +205,17 @@ resource "aws_ecs_service" "prometheus" {
     security_groups  = [aws_security_group.ecs.id]
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.prometheus.arn
+    container_name   = "prometheus"
+    container_port   = 9090
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.prometheus.arn
   }
+
+  depends_on = [aws_lb_listener.prometheus]
 }
 
 resource "aws_ecs_service" "grafana" {
@@ -221,9 +231,17 @@ resource "aws_ecs_service" "grafana" {
     security_groups  = [aws_security_group.ecs.id]
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.grafana.arn
+    container_name   = "grafana"
+    container_port   = 3000
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.grafana.arn
   }
+
+  depends_on = [aws_lb_listener.grafana]
 }
 
 resource "aws_security_group" "ecs" {
@@ -234,6 +252,22 @@ resource "aws_security_group" "ecs" {
     description     = "Frontend from ALB"
     from_port       = 80
     to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description     = "Grafana from ALB"
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description     = "Prometheus from ALB"
+    from_port       = 9090
+    to_port         = 9090
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }

@@ -1,2 +1,6 @@
-# REPLACE THIS FILE WITH YOUR REAL requirements.txt
-Flask==3.1.0
+Flask
+gunicorn
+stripe
+mysql-connector-python
+python-dotenv
+prometheus-client

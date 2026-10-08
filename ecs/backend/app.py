@@ -1,17 +1,19 @@
-from flask import Flask, Response
-from prometheus_client import generate_latest
+# REPLACE THIS FILE WITH YOUR REAL app.py
+from flask import Flask, jsonify
+
 app = Flask(__name__)
+
+@app.get("/")
+def index():
+    return jsonify({"status": "ECS backend placeholder"})
 
 @app.get("/health")
 def health():
-    return "healthy", 200
+    return jsonify({"status": "healthy"})
 
 @app.get("/metrics")
 def metrics():
-    return Response(generate_latest(), mimetype="text/plain")
+    return "# ECS backend placeholder metrics\n"
 
-@app.get("/")
-def root():
-    return "ECS backend is running", 200
-
-app.run(host="0.0.0.0", port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

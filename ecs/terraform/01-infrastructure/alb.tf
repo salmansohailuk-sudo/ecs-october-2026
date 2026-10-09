@@ -1,17 +1,20 @@
+
 resource "aws_security_group" "alb" {
-  name   = "${var.project_name}-alb-sg"
-  vpc_id = var.vpc_id
+  name        = "${var.project_name}-alb-sg"
+  description = "Security group for the ECS application load balancer"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "Application HTTP"
+    description = "Frontend HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Testing only: restrict these ports before production use.
   ingress {
-    description = "Grafana HTTP for testing"
+    description = "Grafana HTTP"
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
@@ -19,7 +22,7 @@ resource "aws_security_group" "alb" {
   }
 
   ingress {
-    description = "Prometheus HTTP for testing"
+    description = "Prometheus HTTP"
     from_port   = 9090
     to_port     = 9090
     protocol    = "tcp"
@@ -32,6 +35,10 @@ resource "aws_security_group" "alb" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "${var.project_name}-alb-sg"
+  }
 }
 
 resource "aws_lb" "main" {
@@ -39,7 +46,15 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = [var.public_subnet_a_id, var.public_subnet_b_id]
+
+  subnets = [
+    aws_subnet.public_a.id,
+    aws_subnet.public_b.id
+  ]
+
+  tags = {
+    Name = "${var.project_name}-alb"
+  }
 }
 
 resource "aws_lb_target_group" "frontend" {
@@ -47,7 +62,7 @@ resource "aws_lb_target_group" "frontend" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   health_check {
     path                = "/health"
@@ -64,7 +79,7 @@ resource "aws_lb_target_group" "grafana" {
   port        = 3000
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   health_check {
     path                = "/api/health"
@@ -81,7 +96,7 @@ resource "aws_lb_target_group" "prometheus" {
   port        = 9090
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   health_check {
     path                = "/-/ready"

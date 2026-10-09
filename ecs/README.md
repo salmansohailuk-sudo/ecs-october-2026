@@ -20,7 +20,8 @@ Creates:
 - RDS MySQL
 - Four ECR repositories
 - Builder EC2 with Docker, Docker Compose, AWS CLI, Git and MySQL client
-- Builder IAM role
+- Builder IAM role#
+- ALB
 
 It does NOT create ECS.
 
@@ -62,6 +63,12 @@ Four images are pushed:
 - monitoring-ecs-prometheus
 - monitoring-ecs-grafana
 
+### Stage 1d - Copy  ALB URL to Webhook
+
+```bash
+
+```
+
 ### Stage 2 - ECS
 
 First collect Stage 1 outputs:
@@ -71,7 +78,7 @@ cd terraform/01-infrastructure
 terraform output
 ```
 
-Copy the VPC, subnet, ECR and DB endpoint values into:
+Copy the VPC, subnet, ALB, ECR and DB endpoint values into:
 
 ```text
 terraform/02-ecs/terraform.tfvars
@@ -81,7 +88,7 @@ Create it from the example:
 
 ```bash
 cd ../02-ecs
-cp terraform.tfvars.example terraform.tfvars
+terraform.tfvars
 ```
 
 Set:

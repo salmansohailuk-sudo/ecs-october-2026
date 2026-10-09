@@ -136,6 +136,17 @@ CloudWatch exporter is baked into the Prometheus image.
 
 There are no separate ECR repositories for either exporter.
 
+## Check prometheus
+
+- Prometheus targets:
+
+http://ecs-october-2026-alb-1732281227.us-east-1.elb.amazonaws.com:9090/targets
+
+- Prometheus query API example (checks whether Prometheus is responding):
+
+http://ecs-october-2026-alb-1732281227.us-east-1.elb.amazonaws.com:9090/api/v1/query?query=up
+
+
 ## Important
 
 - No EC2 key pair is required.

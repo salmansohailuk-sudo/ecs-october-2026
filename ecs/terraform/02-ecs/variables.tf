@@ -74,3 +74,13 @@ variable "grafana_admin_password" {
   type      = string
   sensitive = true
 }
+
+variable "alb_dns_name" {
+  description = "DNS name of the ALB created in Stage 1"
+  type        = string
+}
+
+variable "alb_security_group_id" {
+  description = "Security group ID of the ALB created in Stage 1"
+  type        = string
+}

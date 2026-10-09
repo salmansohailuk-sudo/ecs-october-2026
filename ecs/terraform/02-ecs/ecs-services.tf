@@ -162,7 +162,7 @@ resource "aws_ecs_service" "frontend" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.frontend.arn
+    target_group_arn = var.frontend_target_group_arn
     container_name   = "frontend"
     container_port   = 80
   }
@@ -171,7 +171,6 @@ resource "aws_ecs_service" "frontend" {
     registry_arn = aws_service_discovery_service.frontend.arn
   }
 
-  depends_on = [aws_lb_listener.http]
 }
 
 resource "aws_ecs_service" "backend" {
@@ -206,7 +205,7 @@ resource "aws_ecs_service" "prometheus" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.prometheus.arn
+    target_group_arn = var.prometheus_target_group_arn
     container_name   = "prometheus"
     container_port   = 9090
   }
@@ -215,7 +214,6 @@ resource "aws_ecs_service" "prometheus" {
     registry_arn = aws_service_discovery_service.prometheus.arn
   }
 
-  depends_on = [aws_lb_listener.prometheus]
 }
 
 resource "aws_ecs_service" "grafana" {
@@ -232,7 +230,7 @@ resource "aws_ecs_service" "grafana" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.grafana.arn
+    target_group_arn = var.grafana_target_group_arn
     container_name   = "grafana"
     container_port   = 3000
   }
@@ -241,7 +239,6 @@ resource "aws_ecs_service" "grafana" {
     registry_arn = aws_service_discovery_service.grafana.arn
   }
 
-  depends_on = [aws_lb_listener.grafana]
 }
 
 resource "aws_security_group" "ecs" {
@@ -253,7 +250,7 @@ resource "aws_security_group" "ecs" {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    security_groups = [var.alb_security_group_id]
   }
 
   ingress {
@@ -261,7 +258,7 @@ resource "aws_security_group" "ecs" {
     from_port       = 3000
     to_port         = 3000
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    security_groups = [var.alb_security_group_id]
   }
 
   ingress {
@@ -269,7 +266,7 @@ resource "aws_security_group" "ecs" {
     from_port       = 9090
     to_port         = 9090
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    security_groups = [var.alb_security_group_id]
   }
 
   ingress {

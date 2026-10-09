@@ -84,3 +84,20 @@ variable "alb_security_group_id" {
   description = "Security group ID of the ALB created in Stage 1"
   type        = string
 }
+
+# Stage 1 ALB target groups
+
+variable "frontend_target_group_arn" {
+  description = "Frontend target group ARN created in Stage 1"
+  type        = string
+}
+
+variable "grafana_target_group_arn" {
+  description = "Grafana target group ARN created in Stage 1"
+  type        = string
+}
+
+variable "prometheus_target_group_arn" {
+  description = "Prometheus target group ARN created in Stage 1"
+  type        = string
+}

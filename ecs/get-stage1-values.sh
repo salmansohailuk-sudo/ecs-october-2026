@@ -1,29 +1,22 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+# Prints the Stage 1 values needed by Stage 2.
+# Run it where you ran Stage 1 "terraform apply" (it reads the Terraform outputs).
+# It only prints. Copy the lines into terraform/02-ecs/terraform.tfvars by hand.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STAGE1_DIR="$SCRIPT_DIR/terraform/01-infrastructure"
+cd "$(dirname "$0")/terraform/01-infrastructure" || exit 1
 
-outputs=(
-  vpc_id
-  public_subnet_a_id
-  public_subnet_b_id
-  ecr_frontend
-  ecr_backend
-  ecr_prometheus
-  ecr_grafana
-  db_endpoint
-  alb_dns_name
-  alb_security_group_id
-  frontend_target_group_arn
-  grafana_target_group_arn
-  prometheus_target_group_arn
-)
-
-echo "# Stage 1 outputs — copy into terraform/02-ecs/terraform.tfvars"
+echo "# Copy these lines into terraform/02-ecs/terraform.tfvars"
 echo
-
-for name in "${outputs[@]}"; do
-  value="$(terraform -chdir="$STAGE1_DIR" output -raw "$name")"
-  printf '%-30s = "%s"\n' "$name" "$value"
-done
+echo "vpc_id                = \"$(terraform output -raw vpc_id)\""
+echo "public_subnet_a_id    = \"$(terraform output -raw public_subnet_a_id)\""
+echo "public_subnet_b_id    = \"$(terraform output -raw public_subnet_b_id)\""
+echo "ecs_security_group_id = \"$(terraform output -raw ecs_security_group_id)\""
+echo "tg_frontend_arn       = \"$(terraform output -raw tg_frontend_arn)\""
+echo "tg_grafana_arn        = \"$(terraform output -raw tg_grafana_arn)\""
+echo "tg_prometheus_arn     = \"$(terraform output -raw tg_prometheus_arn)\""
+echo "alb_dns_name          = \"$(terraform output -raw alb_dns_name)\""
+echo "ecr_frontend          = \"$(terraform output -raw ecr_frontend)\""
+echo "ecr_backend           = \"$(terraform output -raw ecr_backend)\""
+echo "ecr_prometheus        = \"$(terraform output -raw ecr_prometheus)\""
+echo "ecr_grafana           = \"$(terraform output -raw ecr_grafana)\""
+echo "db_endpoint           = \"$(terraform output -raw db_endpoint)\""

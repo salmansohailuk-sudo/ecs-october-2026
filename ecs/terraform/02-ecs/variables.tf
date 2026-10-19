@@ -13,38 +13,22 @@ variable "namespace_name" {
   default = "testcluster.local"
 }
 
-variable "vpc_id" {
-  type = string
-}
+# From Stage 1 (run ./get-stage1-values.sh)
+variable "vpc_id" { type = string }
+variable "public_subnet_a_id" { type = string }
+variable "public_subnet_b_id" { type = string }
+variable "ecs_security_group_id" { type = string }
+variable "tg_frontend_arn" { type = string }
+variable "tg_grafana_arn" { type = string }
+variable "tg_prometheus_arn" { type = string }
+variable "alb_dns_name" { type = string }
+variable "ecr_frontend" { type = string }
+variable "ecr_backend" { type = string }
+variable "ecr_prometheus" { type = string }
+variable "ecr_grafana" { type = string }
+variable "db_endpoint" { type = string }
 
-variable "public_subnet_a_id" {
-  type = string
-}
-
-variable "public_subnet_b_id" {
-  type = string
-}
-
-variable "ecr_frontend" {
-  type = string
-}
-
-variable "ecr_backend" {
-  type = string
-}
-
-variable "ecr_prometheus" {
-  type = string
-}
-
-variable "ecr_grafana" {
-  type = string
-}
-
-variable "db_endpoint" {
-  type = string
-}
-
+# Your own values
 variable "db_username" {
   type    = string
   default = "admin"
@@ -73,31 +57,4 @@ variable "grafana_admin_user" {
 variable "grafana_admin_password" {
   type      = string
   sensitive = true
-}
-
-variable "alb_dns_name" {
-  description = "DNS name of the ALB created in Stage 1"
-  type        = string
-}
-
-variable "alb_security_group_id" {
-  description = "Security group ID of the ALB created in Stage 1"
-  type        = string
-}
-
-# Stage 1 ALB target groups
-
-variable "frontend_target_group_arn" {
-  description = "Frontend target group ARN created in Stage 1"
-  type        = string
-}
-
-variable "grafana_target_group_arn" {
-  description = "Grafana target group ARN created in Stage 1"
-  type        = string
-}
-
-variable "prometheus_target_group_arn" {
-  description = "Prometheus target group ARN created in Stage 1"
-  type        = string
 }

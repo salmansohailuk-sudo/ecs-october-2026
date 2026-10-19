@@ -27,15 +27,18 @@ resource "aws_instance" "builder" {
     set -eux
 
     dnf update -y
-    dnf install -y docker git awscli mariadb105 curl
+    dnf install -y docker git mariadb105 curl dnf-plugins-core
+
+    # Terraform (needed to run Stage 2 on this server)
+    dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+    dnf install -y terraform
 
     systemctl enable docker
     systemctl start docker
     usermod -aG docker ec2-user
 
     mkdir -p /usr/local/lib/docker/cli-plugins
-    curl -SL "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64" \\
-      -o /usr/local/lib/docker/cli-plugins/docker-compose
+    curl -SL "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose
     chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
     cd /home/ec2-user
@@ -45,6 +48,7 @@ resource "aws_instance" "builder" {
 
     chown -R ec2-user:ec2-user /home/ec2-user/ecs-october-2026
     chmod +x /home/ec2-user/ecs-october-2026/ecs/*.sh
+    touch /home/ec2-user/ecs-october-2026/READY
   EOF
 
   tags = {

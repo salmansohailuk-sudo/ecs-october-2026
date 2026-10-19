@@ -38,29 +38,34 @@ output "public_subnet_b_id" {
   value = aws_subnet.public_b.id
 }
 
-# Application Load Balancer outputs — added for Stage 1
-
 output "alb_dns_name" {
-  description = "Public DNS name of the Application Load Balancer"
-  value       = aws_lb.main.dns_name
+  value = aws_lb.main.dns_name
 }
 
-output "alb_security_group_id" {
-  description = "Security group ID for the Application Load Balancer"
-  value       = aws_security_group.alb.id
+output "frontend_url" {
+  value = "http://${aws_lb.main.dns_name}"
 }
 
-output "frontend_target_group_arn" {
-  description = "Frontend target group ARN for Stage 2 ECS"
-  value       = aws_lb_target_group.frontend.arn
+output "grafana_url" {
+  value = "http://${aws_lb.main.dns_name}:3000"
 }
 
-output "grafana_target_group_arn" {
-  description = "Grafana target group ARN for Stage 2 ECS"
-  value       = aws_lb_target_group.grafana.arn
+output "prometheus_url" {
+  value = "http://${aws_lb.main.dns_name}:9090"
 }
 
-output "prometheus_target_group_arn" {
-  description = "Prometheus target group ARN for Stage 2 ECS"
-  value       = aws_lb_target_group.prometheus.arn
+output "ecs_security_group_id" {
+  value = aws_security_group.ecs.id
+}
+
+output "tg_frontend_arn" {
+  value = aws_lb_target_group.frontend.arn
+}
+
+output "tg_grafana_arn" {
+  value = aws_lb_target_group.grafana.arn
+}
+
+output "tg_prometheus_arn" {
+  value = aws_lb_target_group.prometheus.arn
 }

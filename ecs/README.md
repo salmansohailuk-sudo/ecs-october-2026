@@ -1,12 +1,12 @@
 # ECS October 2026
 
-Standalone ECS test project. It is independent from the existing EC2 Docker application.
+Two stages:
+- Stage 1: VPC, RDS, ECR, ALB, security groups, builder EC2.
+- Stage 2: ECS cluster and services (run on the builder EC2).
 
-The builder EC2 only builds Docker images, pushes them to ECR and can initialise RDS. The application and monitoring run on ECS Fargate.
+## Stage 1 - infrastructure + ALB
 
-## Deployment order
-
-### Stage 1 - infrastructure
+Push this repo to GitHub first (the builder EC2 clones it), then:
 
 ```bash
 cd ecs/terraform/01-infrastructure
@@ -14,144 +14,55 @@ terraform init
 terraform apply
 ```
 
-Creates:
-- VPC and two public subnets
-- Internet Gateway and public routes
-- RDS MySQL
-- Four ECR repositories
-- Builder EC2 with Docker, Docker Compose, AWS CLI, Git and MySQL client
-- Builder IAM role#
-- ALB
+## Get the Stage 1 values
 
-It does NOT create ECS.
-
-### Connect to builder EC2
-
-AWS Console -> EC2 -> Instances -> select the builder -> Connect -> EC2 Instance Connect.
-
-Then:
+Run this in the same place you ran Stage 1:
 
 ```bash
-cd /home/ec2-user/ecs-october-2026/ecs
+cd ecs
+./get-stage1-values.sh
 ```
 
-### Stage 1a - initialise database
+It prints a list of values. Keep them, you paste them into Stage 2 below.
+
+## Connect to the builder EC2
+
+AWS Console -> EC2 -> builder -> Connect -> EC2 Instance Connect.
+Wait until this file exists:
 
 ```bash
-export RDS_ENDPOINT="$(cd terraform/01-infrastructure && terraform output -raw db_endpoint)"
+ls ~/ecs-october-2026/READY
+cd ~/ecs-october-2026/ecs
+```
+
+## Prepare database and images (on builder EC2)
+
+```bash
+export RDS_ENDPOINT="paste db_endpoint here"
 export DB_PASSWORD="Cloud123"
 ./initialize-database.sh
-```
-
-### Stage 1b - build images
-
-Docker Compose is used only to build the images. It does not start the application.
-
-```bash
 ./build-images.sh
-```
-
-### Stage 1c - push images
-
-```bash
 ./push-images.sh
 ```
 
-Four images are pushed:
-- ecomm-ecs-frontend
-- ecomm-ecs-backend
-- monitoring-ecs-prometheus
-- monitoring-ecs-grafana
-
-### Stage 1d - Copy  ALB URL to Webhook
+## Stage 2 - ECS (on builder EC2)
 
 ```bash
-
-```
-
-### Stage 2 - ECS
-
-First collect Stage 1 outputs:
-
-```bash
-cd terraform/01-infrastructure
-terraform output
-```
-
-Copy the VPC, subnet, ALB, ECR and DB endpoint values into:
-
-```text
-terraform/02-ecs/terraform.tfvars
-```
-
-Create it from the example:
-
-```bash
-cd ../02-ecs
-terraform.tfvars
-```
-
-Set:
-- vpc_id
-- public_subnet_a_id
-- public_subnet_b_id
-- ecr_frontend
-- ecr_backend
-- ecr_prometheus
-- ecr_grafana
-- db_endpoint
-- db_password
-- stripe_secret_key
-- stripe_webhook_secret
-- grafana_admin_password
-
-Then:
-
-```bash
+cd ~/ecs-october-2026/ecs/terraform/02-ecs
+cp terraform.tfvars.example terraform.tfvars
+nano terraform.tfvars      # paste the Stage 1 values, set the Stripe keys and Grafana password
 terraform init
 terraform apply
 ```
 
-## Runtime architecture
+The app, Grafana (port 3000) and Prometheus (port 9090) URLs are printed at the end.
 
-```text
-Internet
-   |
-   v
- ALB
-   |-- :80   -> Frontend/Nginx -> Backend
-   |-- :3000 -> Grafana
-   `-- :9090 -> Prometheus
+## Destroy
 
-ECS Cloud Map namespace:
-  testcluster.local
+1. On the builder EC2: `terraform destroy` in `02-ecs`
+2. Where you ran Stage 1: `terraform destroy` in `01-infrastructure`
 
-backend.testcluster.local:5000
-prometheus.testcluster.local:9090
-frontend.testcluster.local:9113
-```
+## Notes
 
-Nginx exporter is baked into the frontend image.
-CloudWatch exporter is baked into the Prometheus image.
-
-There are no separate ECR repositories for either exporter.
-
-## Check prometheus
-
-- Prometheus targets:
-
-http://ecs-october-2026-alb-1732281227.us-east-1.elb.amazonaws.com:9090/targets
-
-- Prometheus query API example (checks whether Prometheus is responding):
-
-http://ecs-october-2026-alb-1732281227.us-east-1.elb.amazonaws.com:9090/api/v1/query?query=up
-
-
-## Important
-
-- No EC2 key pair is required.
-- No SSM Session Manager is required.
-- No NAT Gateway is used.
-- ECS Fargate tasks run in public subnets with public IPs for this testing setup.
-- Do not commit `terraform.tfvars` or secrets.
-- The existing EC2 project is not modified by this project.
+- Testing only: Fargate in public subnets, open ALB ports, builder EC2 has AdministratorAccess.
+- Never commit `terraform.tfvars`.

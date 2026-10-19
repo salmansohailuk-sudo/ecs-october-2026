@@ -1,20 +1,17 @@
-
 resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-alb-sg"
-  description = "Security group for the ECS application load balancer"
-  vpc_id      = aws_vpc.main.id
+  name   = "${var.project_name}-alb-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
-    description = "Frontend HTTP"
+    description = "Application HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Testing only: restrict these ports before production use.
   ingress {
-    description = "Grafana HTTP"
+    description = "Grafana HTTP for testing"
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
@@ -22,7 +19,7 @@ resource "aws_security_group" "alb" {
   }
 
   ingress {
-    description = "Prometheus HTTP"
+    description = "Prometheus HTTP for testing"
     from_port   = 9090
     to_port     = 9090
     protocol    = "tcp"
@@ -35,10 +32,6 @@ resource "aws_security_group" "alb" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "${var.project_name}-alb-sg"
-  }
 }
 
 resource "aws_lb" "main" {
@@ -46,15 +39,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-
-  subnets = [
-    aws_subnet.public_a.id,
-    aws_subnet.public_b.id
-  ]
-
-  tags = {
-    Name = "${var.project_name}-alb"
-  }
+  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
 }
 
 resource "aws_lb_target_group" "frontend" {

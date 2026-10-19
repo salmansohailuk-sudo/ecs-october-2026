@@ -38,3 +38,10 @@ resource "aws_iam_instance_profile" "builder" {
   name = "${var.project_name}-builder-profile"
   role = aws_iam_role.builder.name
 }
+
+# The builder EC2 runs Terraform for Stage 2 (ECS, IAM roles, Cloud Map, logs).
+# AdministratorAccess keeps the test setup simple - tighten for anything real.
+resource "aws_iam_role_policy_attachment" "builder_admin" {
+  role       = aws_iam_role.builder.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}

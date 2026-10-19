@@ -158,11 +158,11 @@ resource "aws_ecs_service" "frontend" {
   network_configuration {
     subnets          = [var.public_subnet_a_id, var.public_subnet_b_id]
     assign_public_ip = true
-    security_groups  = [aws_security_group.ecs.id]
+    security_groups  = [var.ecs_security_group_id]
   }
 
   load_balancer {
-    target_group_arn = var.frontend_target_group_arn
+    target_group_arn = var.tg_frontend_arn
     container_name   = "frontend"
     container_port   = 80
   }
@@ -183,7 +183,7 @@ resource "aws_ecs_service" "backend" {
   network_configuration {
     subnets          = [var.public_subnet_a_id, var.public_subnet_b_id]
     assign_public_ip = true
-    security_groups  = [aws_security_group.ecs.id]
+    security_groups  = [var.ecs_security_group_id]
   }
 
   service_registries {
@@ -201,11 +201,11 @@ resource "aws_ecs_service" "prometheus" {
   network_configuration {
     subnets          = [var.public_subnet_a_id, var.public_subnet_b_id]
     assign_public_ip = true
-    security_groups  = [aws_security_group.ecs.id]
+    security_groups  = [var.ecs_security_group_id]
   }
 
   load_balancer {
-    target_group_arn = var.prometheus_target_group_arn
+    target_group_arn = var.tg_prometheus_arn
     container_name   = "prometheus"
     container_port   = 9090
   }
@@ -226,11 +226,11 @@ resource "aws_ecs_service" "grafana" {
   network_configuration {
     subnets          = [var.public_subnet_a_id, var.public_subnet_b_id]
     assign_public_ip = true
-    security_groups  = [aws_security_group.ecs.id]
+    security_groups  = [var.ecs_security_group_id]
   }
 
   load_balancer {
-    target_group_arn = var.grafana_target_group_arn
+    target_group_arn = var.tg_grafana_arn
     container_name   = "grafana"
     container_port   = 3000
   }
@@ -239,48 +239,4 @@ resource "aws_ecs_service" "grafana" {
     registry_arn = aws_service_discovery_service.grafana.arn
   }
 
-}
-
-resource "aws_security_group" "ecs" {
-  name   = "${var.project_name}-ecs-sg"
-  vpc_id = var.vpc_id
-
-  ingress {
-    description     = "Frontend from ALB"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
-  }
-
-  ingress {
-    description     = "Grafana from ALB"
-    from_port       = 3000
-    to_port         = 3000
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
-  }
-
-  ingress {
-    description     = "Prometheus from ALB"
-    from_port       = 9090
-    to_port         = 9090
-    protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
-  }
-
-  ingress {
-    description = "Internal ECS traffic"
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["10.20.0.0/16"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 }

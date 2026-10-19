@@ -10,6 +10,7 @@ resource "aws_db_subnet_group" "mysql" {
 resource "aws_db_instance" "mysql" {
   identifier        = "${var.project_name}-mysql"
   engine            = "mysql"
+  engine_version    = "8.0"
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 

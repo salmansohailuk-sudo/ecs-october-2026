@@ -27,7 +27,7 @@ resource "aws_instance" "builder" {
     set -eux
 
     dnf update -y
-    dnf install -y docker git mariadb105 curl dnf-plugins-core
+    dnf install -y docker git mariadb105 dnf-plugins-core
 
     # Terraform (needed to run Stage 2 on this server)
     dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo

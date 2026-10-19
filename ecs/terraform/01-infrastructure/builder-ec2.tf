@@ -7,9 +7,6 @@ resource "aws_instance" "builder" {
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.builder.name
 
-  # Optional key pair. Leave empty to use EC2 Instance Connect from the console.
-  key_name = var.key_name
-
   metadata_options {
     http_endpoint               = "enabled"
     http_tokens                 = "required"

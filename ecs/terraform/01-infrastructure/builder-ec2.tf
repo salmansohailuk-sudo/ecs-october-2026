@@ -1,37 +1,31 @@
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-}
-
 resource "aws_instance" "builder" {
-  ami                         = data.aws_ami.amazon_linux.id
+  # Same AMI as the working EC2 project (Amazon Linux 2, us-east-1).
+  ami                         = "ami-0c02fb55956c7d316"
   instance_type               = "t3.medium"
   subnet_id                   = aws_subnet.public_a.id
   vpc_security_group_ids      = [aws_security_group.builder.id]
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.builder.name
 
-  # No key pair. Use EC2 Instance Connect from the AWS Console.
+  # Optional key pair. Leave empty to use EC2 Instance Connect from the console.
+  key_name = var.key_name
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+
   user_data = <<-EOF
     #!/bin/bash
     set -eux
 
-    dnf update -y
-    dnf install -y docker git mariadb105 dnf-plugins-core
+    yum update -y
+    yum install -y docker git mariadb yum-utils
 
     # Terraform (needed to run Stage 2 on this server)
-    dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-    dnf install -y terraform
+    yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+    yum install -y terraform
 
     systemctl enable docker
     systemctl start docker
